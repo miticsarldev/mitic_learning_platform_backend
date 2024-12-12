@@ -12,7 +12,7 @@ import {
 const router = Router();
 
 // Registration
-router.post("/register", validateUser,register);
+router.post("/register", validateUser, register);
 
 // Login
 router.post("/login", login);
