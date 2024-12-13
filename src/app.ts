@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import cookieParser from "cookie-parser";
+import authRoutes from "./routes/auth.route";
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
+
+// Routes
+app.use("/api", authRoutes);
 
 // Here use the app.use to use the routes
 
