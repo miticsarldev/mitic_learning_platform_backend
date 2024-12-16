@@ -3,6 +3,8 @@ import cors from "cors";
 import path from "path";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.route";
+import jobRoutes from "./routes/job.route";
+
 
 const app = express();
 
@@ -25,6 +27,9 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/api", authRoutes);
+
+// routes job
+app.use("/api", jobRoutes);
 
 // Here use the app.use to use the routes
 
