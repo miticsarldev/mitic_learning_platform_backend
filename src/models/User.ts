@@ -13,7 +13,7 @@ const UserSchema: Schema = new Schema<IUser>(
         dateOfBirth: { type: Date },
         phone: { type: String, required: true, unique: true },
         address: { type: String },
-        studyLevel: { type: Schema.Types.ObjectId, ref: "Level" },
+        studyLevel: { type: Schema.Types.ObjectId, ref: "StudyLevel" },
     },
     { timestamps: true }
 );
