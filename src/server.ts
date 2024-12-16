@@ -17,7 +17,7 @@ const options: ConnectOptions & ConnectionOptionsExtend = {
 };
 
 mongoose
-  .connect(process.env.MONGO_URI as string, options)
+  .connect(process.env.MONGO_URI as string)
   .then(() => {
     console.log("MongoDB connected");
     app.listen(PORT, () => {
