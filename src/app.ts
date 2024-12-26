@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.route";
 import courseRoutes from "./routes/course.route";
 
+import enrollementRoutes from "./routes/enrollement.route";
 
 const app = express();
 
@@ -30,6 +31,8 @@ app.use("/api", authRoutes);
 
 // routes course
 app.use("/api", courseRoutes);
+// Routes pour inscription
+app.use("/api", enrollementRoutes);
 
 // Here use the app.use to use the routes
 
