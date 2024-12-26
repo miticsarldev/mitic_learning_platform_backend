@@ -10,6 +10,7 @@ import StudyLevelRoutes from "./routes/studyLevel.route";
 import categoryRoutes from "./routes/category.route";
 import paymentsRoute from "./routes/payment.route";
 import lessonsRoutes from "./routes/lessons.route";
+import sectionRoutes from "./routes/section.route";
 
 const app = express();
 
@@ -47,6 +48,8 @@ app.use("/api", categoryRoutes);
 app.use("/api", paymentsRoute);
 //routes pour lessons
 app.use("/api", lessonsRoutes);
+//routes pour section
+app.use("/api", sectionRoutes);
 
 // Here use the app.use to use the routes
 
