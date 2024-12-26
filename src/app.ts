@@ -8,6 +8,7 @@ import enrollementRoutes from "./routes/enrollement.route";
 import jobRoutes from "./routes/job.route";
 import StudyLevelRoutes from "./routes/studyLevel.route";
 import categoryRoutes from "./routes/category.route";
+import paymentsRoute from "./routes/payment.route";
 
 const app = express();
 
@@ -41,6 +42,8 @@ app.use("/api", jobRoutes);
 app.use("/api", StudyLevelRoutes);
 // routes category
 app.use("/api", categoryRoutes);
+// routes payment
+app.use("/api", paymentsRoute);
 
 // Here use the app.use to use the routes
 
