@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.route";
 import courseRoutes from "./routes/course.route";
 import enrollementRoutes from "./routes/enrollement.route";
 import jobRoutes from "./routes/job.route";
+import StudyLevelRoutes from "./routes/studyLevel.route";
 
 const app = express();
 
@@ -35,6 +36,8 @@ app.use("/api", courseRoutes);
 app.use("/api", enrollementRoutes);
 // routes job
 app.use("/api", jobRoutes);
+// Routes pour StudyLevel
+app.use("/api", StudyLevelRoutes);
 
 // Here use the app.use to use the routes
 
