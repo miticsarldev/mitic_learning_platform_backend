@@ -6,9 +6,10 @@ export interface ICourse extends Document {
     path_image: string;
     path_video: string;
     description: string;
-    price: Number;
+    price?: Number;
     isCertified: Boolean;
     duration: string;
+    status: boolean;
     created_by: Schema.Types.ObjectId;
     studyLevel_id?: Schema.Types.ObjectId;
     category_id?: Schema.Types.ObjectId;

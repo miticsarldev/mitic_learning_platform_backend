@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import Payment from "../models/Payment";
+import User from "../models/User";
+import Course from "../models/Course";
+import Enrollement from "../models/Enrollement";
 
 /**
  * @desc Créer un nouveau paiement
@@ -134,5 +137,49 @@ export const getPaymentStats = async (req: Request, res: Response) => {
         return res.status(200).json({ success: true, data: stats });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Impossible de recuperer les statistiques" });
+    }
+};
+
+
+// Fonction pour récupérer les paiements liés aux cours d'un professeur
+export const getPaymentsByTeacher = async (req: Request, res: Response) => {
+    try {
+        // Récupération de l'ID du professeur depuis les paramètres de la requête
+        const { teacherId } = req.params;
+
+        // Vérification que l'ID est valide
+        if (!teacherId) {
+            return res.status(400).json({ message: "L'ID du professeur est requis." });
+        }
+
+        // Trouver les cours créés par ce professeur
+        const courses = await Course.find({ created_by: teacherId });
+
+        if (courses.length === 0) {
+            return res.status(404).json({ message: "Aucun cours trouvé pour ce professeur." });
+        }
+
+        // Récupérer les IDs des cours
+        const courseIds = courses.map(course => course._id);
+
+        // Trouver les paiements liés à ces cours
+        const payments = await Payment.find({ course_id: { $in: courseIds } })
+            .populate({ path: "user_id", select: "firstname lastname email phone" }) // Informations de l'utilisateur
+            .populate({ path: "course_id", select: "title description price" })       // Informations sur le cours
+            .populate({ path: "enrollement_id", select: "start_date status completion_date" }); // Informations sur l'inscription
+
+        // Vérifier s'il y a des paiements
+        if (payments.length === 0) {
+            return res.status(404).json({ message: "Aucun paiement trouvé pour les cours de ce professeur." });
+        }
+
+        // Retourner les paiements avec les informations demandées
+        return res.status(200).json({
+            payments: payments
+        });
+
+    } catch (error) {
+        console.error("Erreur lors de la récupération des paiements :", error);
+        return res.status(500).json({ message: "Erreur interne du serveur." });
     }
 };

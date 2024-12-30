@@ -6,7 +6,8 @@ import {
     updatePayment,
     deletePayment,
     filterPayments,
-    getPaymentStats
+    getPaymentStats,
+    getPaymentsByTeacher
 } from "../controllers/payment.controller";
 
 const router = Router();
@@ -52,5 +53,12 @@ router.get("/payments/filter", filterPayments);
  * @desc Obtenir les statistiques des paiements
  */
 router.get("/payments/stats", getPaymentStats);
+
+/**
+ * @route GET /api/payments-teacher/:teacherId
+ * @desc Obtenir les payements d'un prof
+ */
+
+router.get("/payments-teacher/:teacherId", getPaymentsByTeacher);
 
 export default router;
