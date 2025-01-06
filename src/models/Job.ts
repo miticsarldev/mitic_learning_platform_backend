@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import { IJob } from "../types/model.job.type";
 
-const CategoryShema: Schema = new Schema<IJob>(
+const JobShema: Schema = new Schema<IJob>(
     {
         name: { type: String, required: true },
         description: { type: String },
@@ -10,5 +10,5 @@ const CategoryShema: Schema = new Schema<IJob>(
 );
 
 
-const Job = model<IJob>("Job", CategoryShema);
+const Job = model<IJob>("Job", JobShema);
 export default Job;

@@ -13,4 +13,5 @@ export interface IUser extends Document {
     address?: string;
     studyLevel?:  Schema.Types.ObjectId;
     lastLogin: Date;
+    status: boolean;
 }

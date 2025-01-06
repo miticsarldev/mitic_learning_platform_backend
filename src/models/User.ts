@@ -14,6 +14,7 @@ const UserSchema: Schema = new Schema<IUser>(
         phone: { type: String, required: true, unique: true },
         address: { type: String },
         studyLevel: { type: Schema.Types.ObjectId, ref: "StudyLevel" },
+        status: { type: Boolean, default: true },
     },
     { timestamps: true }
 );

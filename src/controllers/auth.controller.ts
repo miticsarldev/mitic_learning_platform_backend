@@ -10,17 +10,46 @@ import jwt from "jsonwebtoken";
  * @param {IUser} userData - Les données de l'utilisateur à créer.
  * @returns {Promise<IUser>} - L'utilisateur créé.
  */
-export const register = async (userData: IUser): Promise<IUser> => {
+export const register = async (req: Request, res: Response) => {
     try {
-        // Hash du mot de passe avant enregistrement
-        const salt = await bcrypt.genSalt(10);
-        userData.password = await bcrypt.hash(userData.password, salt);
+        const { firstname, lastname, username, password, email, phone, role, dateOfBirth, address, studyLevel } = req.body;
+
+        // Vérifier si tous les champs obligatoires sont présents
+        if (!firstname || !lastname || !username || !password || !email || !phone || !role) {
+            return res.status(400).json({ message: "Tous les champs obligatoires doivent être fournis." });
+        }
+
+        // Vérification du rôle
+        if (role !== "student" && role !== "teacher" && role !== "admin") {
+            return res.status(400).json({ message: "Rôle invalide." });
+        }
+
+        // Hachage du mot de passe
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Création de l'utilisateur
-        const user = new User(userData);
-        return await user.save();
-    } catch (error: any) {
-        throw new Error(`Erreur lors de la création de l'utilisateur : ${error.message}`);
+        const newUser = new User({
+            firstname,
+            lastname,
+            username,
+            password: hashedPassword,
+            email,
+            phone,
+            role,
+            dateOfBirth,
+            address,
+            studyLevel,
+        });
+
+        // Sauvegarde de l'utilisateur
+        await newUser.save();
+
+        // Réponse
+        res.status(201).json({ message: "Utilisateur créé avec succès", user: newUser });
+
+    } catch (error) {
+        console.error('Erreur lors de la création de l\'utilisateur :', error);
+        res.status(500).json({ message: `Erreur interne du serveur : ${error}` });
     }
 };
 
@@ -33,7 +62,7 @@ export const getUserById = async (userId: string): Promise<IUser | null> => {
     try {
         return await User.findById(userId).populate("studyLevel").exec();
     } catch (error: any) {
-        throw new Error(`Erreur lors de la récupération de l'utilisateur : ${error.message}`);
+        throw new Error(`Erreur lors de la récupération de l'utilisateur : ${error}`);
     }
 };
 
@@ -52,7 +81,7 @@ export const updateUser = async (userId: string, updateData: Partial<IUser>): Pr
         }
         return await User.findByIdAndUpdate(userId, updateData, { new: true }).exec();
     } catch (error: any) {
-        throw new Error(`Erreur lors de la mise à jour de l'utilisateur : ${error.message}`);
+        throw new Error(`Erreur lors de la mise à jour de l'utilisateur : ${error}`);
     }
 };
 
@@ -65,7 +94,7 @@ export const deleteUser = async (userId: string): Promise<IUser | null> => {
     try {
         return await User.findByIdAndDelete(userId).exec();
     } catch (error: any) {
-        throw new Error(`Erreur lors de la suppression de l'utilisateur : ${error.message}`);
+        throw new Error(`Erreur lors de la suppression de l'utilisateur : ${error}`);
     }
 };
 
@@ -184,5 +213,24 @@ export const refreshToken = async (req: Request, res: Response) => {
     } catch (err) {
         console.error(err);
         return res.status(403).json({ message: "Invalid refresh token" });
+    }
+};
+
+// Contrôleur pour récupérer tous les utilisateurs
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Récupérer les utilisateurs en peuplant le champ `studyLevel`
+        const users = await User.find().populate("studyLevel");
+
+        res.status(200).json({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs :", error);
+        res.status(500).json({
+            success: false,
+            message: "Erreur interne du serveur.",
+        });
     }
 };
