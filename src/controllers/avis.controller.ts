@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Avis from "../models/Avis";
+import Course from "../models/Course";
 
 /**
  * @desc Créer un nouvel avis
@@ -33,7 +34,7 @@ export const createAvis = async (req: Request, res: Response) => {
  */
 export const getAllAvis = async (req: Request, res: Response) => {
     try {
-        const avis = await Avis.find();
+        const avis = await Avis.find().populate('user_id').populate("item_id").populate("avis_parent_id")
         res.status(200).json({ success: true, data: avis });
     } catch (error) {
         res.status(500).json({ success: false, message: "Une erreur est survenue", error });
@@ -46,7 +47,7 @@ export const getAllAvis = async (req: Request, res: Response) => {
  */
 export const getAvisById = async (req: Request, res: Response) => {
     try {
-        const avis = await Avis.findById(req.params.id);
+        const avis = await Avis.findById(req.params.id).populate('user_id').populate("item_id").populate("avis_parent_id")
 
         if (!avis) {
             return res.status(404).json({ success: false, message: "Avis non trouvé" });
@@ -139,5 +140,70 @@ export const filterAvisByType = async (req: Request, res: Response) => {
         res.status(200).json({ success: true, data: avis });
     } catch (error) {
         res.status(500).json({ success: false, message: "Une erreur est survenue", error });
+    }
+};
+
+export const getCommentsByProfessor = async (req: Request, res: Response) => {
+    try {
+        const { professorId } = req.params;
+
+        if (!professorId) {
+            return res.status(400).json({ error: "Le professeur ID est requis." });
+        }
+
+        // Récupérer les cours créés par le professeur
+        const courses = await Course.find({ created_by: professorId });
+
+        if (courses.length === 0) {
+            return res.status(404).json({ message: "Aucun cours trouvé pour ce professeur." });
+        }
+
+        // Extraire les IDs des cours
+        const courseIds = courses.map(course => course._id);
+
+        // Récupérer les commentaires liés aux cours
+        const avis = await Avis.find({
+            item_id: { $in: courseIds },
+            type: "course"
+        })
+            .populate("user_id", "firstname lastname username email") // Peupler les infos utilisateur
+            .populate("item_id", "title description") // Peupler les infos du cours
+            .populate("avis_parent_id"); // Peupler les infos du commentaire parent
+
+        if (avis.length === 0) {
+            return res.status(201).json({ message: "Aucun commentaire trouvé pour ces cours." });
+        }
+
+        // Retourner les commentaires
+        res.status(200).json({ avis });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des commentaires :", error);
+        res.status(500).json({ error: "Erreur serveur." });
+    }
+};
+
+export const getRepliesForAvis = async (req: Request, res: Response) => {
+    try {
+        const { avisId } = req.params;
+
+        if (!avisId) {
+            return res.status(400).json({ error: "L'ID de l'avis parent est requis." });
+        }
+
+        // Récupérer les réponses à un commentaire
+        const replies = await Avis.find({ avis_parent_id: avisId })
+            .populate("user_id", "firstname lastname username email") // Peupler les infos utilisateur
+            .populate("item_id", "title description") // Peupler les infos du cours
+            .populate("avis_parent_id"); // Peupler les infos du commentaire parent
+
+        if (replies.length === 0) {
+            return res.status(201).json({ message: "Aucune réponse trouvée pour cet avis." });
+        }
+
+        // Retourner les réponses trouvées
+        res.status(200).json({ replies });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des réponses :", error);
+        res.status(500).json({ error: "Erreur serveur." });
     }
 };

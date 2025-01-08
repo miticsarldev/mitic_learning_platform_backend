@@ -3,6 +3,7 @@ import Payment from "../models/Payment";
 import User from "../models/User";
 import Course from "../models/Course";
 import Enrollement from "../models/Enrollement";
+import mongoose from "mongoose";
 
 /**
  * @desc Créer un nouveau paiement
@@ -181,5 +182,116 @@ export const getPaymentsByTeacher = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Erreur lors de la récupération des paiements :", error);
         return res.status(500).json({ message: "Erreur interne du serveur." });
+    }
+};
+
+// Fonction pour obtenir les paiements totaux par année pour les cours d'un professeur
+export const getTotalPaymentsByYear = async (req: Request, res: Response) => {
+    try {
+        const { teacherId } = req.params;
+
+        // Vérification si l'utilisateur est bien un professeur
+        const teacher = await User.findById(teacherId);
+        if (!teacher || teacher.role !== "teacher") {
+            return res.status(404).json({ message: "Teacher not found or invalid role" });
+        }
+
+        // Récupérer tous les cours du professeur
+        const courses = await Course.find({ created_by: teacherId });
+
+        if (!courses.length) {
+            return res.status(404).json({ message: "No courses found for this teacher" });
+        }
+
+        // Récupérer les paiements pour ces cours
+        const payments = await Payment.aggregate([
+            {
+                $match: {
+                    course_id: { $in: courses.map(course => course._id) },
+                },
+            },
+            {
+                $group: {
+                    _id: { $year: "$paymentDate" },  // Regrouper par année
+                    totalAmount: { $sum: "$totaAmount" },  // Calculer le total par année
+                },
+            },
+            {
+                $sort: { _id: 1 },  // Trier par année croissante
+            },
+        ]);
+
+        // Retourner les résultats
+        return res.status(200).json(payments);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const getMonthlyEarningsByTeacher = async (req: Request, res: Response) => {
+    try {
+        const { teacherId, year } = req.params;
+
+        // Vérifications des paramètres
+        if (!teacherId || !year) {
+            return res.status(400).json({ message: "teacherId and year are required." });
+        }
+
+        // Convertir l'année en Date pour les filtres
+        const startOfYear = new Date(`${year}-01-01`);
+        const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
+
+        // Pipeline d'agrégation
+        const payments = await Payment.aggregate([
+            {
+                $lookup: {
+                    from: "courses",
+                    localField: "course_id",
+                    foreignField: "_id",
+                    as: "course",
+                },
+            },
+            { $unwind: "$course" },
+            {
+                $match: {
+                    "course.created_by": new mongoose.Types.ObjectId(teacherId),
+                    paymentDate: {
+                        $gte: new Date(`${year}-01-01`),
+                        $lte: new Date(`${year}-12-31`),
+                    },
+                    status: "success",
+                },
+            },
+            {
+                $group: {
+                    _id: { $month: "$paymentDate" },
+                    totalAmount: { $sum: "$totaAmount" },
+                },
+            },
+            {
+                $sort: { "_id": 1 },
+            },
+        ]);
+
+
+        // Préparer les données pour tous les mois
+        const months = [
+            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+        ];
+        const monthlyData = months.map((month, index) => {
+            const payment = payments.find((p) => p._id === index + 1);
+            return {
+                mois: month,
+                total: payment ? payment.totalAmount : 0,
+            };
+        });
+
+        // Réponse
+        res.status(200).json(monthlyData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
     }
 };

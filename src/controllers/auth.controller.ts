@@ -4,6 +4,7 @@ import User from "../models/User"; // Importer le modèle User
 import { IUser } from "../types/model.user.type";
 import { generateAccessToken, generateRefreshToken } from "../utils";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 /**
  * Créer un nouvel utilisateur.
@@ -58,30 +59,84 @@ export const register = async (req: Request, res: Response) => {
  * @param {string} userId - L'ID de l'utilisateur.
  * @returns {Promise<IUser | null>} - L'utilisateur correspondant ou null s'il n'existe pas.
  */
-export const getUserById = async (userId: string): Promise<IUser | null> => {
+// Contrôleur pour récupérer un utilisateur via son ID
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
-        return await User.findById(userId).populate("studyLevel").exec();
-    } catch (error: any) {
-        throw new Error(`Erreur lors de la récupération de l'utilisateur : ${error}`);
+        const { id } = req.params;
+
+        // Vérification de l'ID fourni
+        if (!id) {
+            res.status(400).json({ message: "L'ID de l'utilisateur est requis." });
+            return;
+        }
+
+        // Recherche de l'utilisateur par ID
+        const user = await User.findById(id);
+
+        if (!user) {
+            res.status(404).json({ message: "Utilisateur non trouvé." });
+            return;
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur lors de la récupération de l'utilisateur.", error });
     }
 };
 
-/**
- * Mettre à jour les informations d'un utilisateur.
- * @param {string} userId - L'ID de l'utilisateur à mettre à jour.
- * @param {Partial<IUser>} updateData - Les nouvelles données à appliquer.
- * @returns {Promise<IUser | null>} - L'utilisateur mis à jour ou null s'il n'existe pas.
- */
-export const updateUser = async (userId: string, updateData: Partial<IUser>): Promise<IUser | null> => {
+
+// Liste des champs autorisés à être mis à jour
+const allowedUpdates = ["firstname", "lastname", "username", "password", "email", "role", "dateOfBirth", "phone", "address", "studyLevel", "status"];
+
+// Contrôleur avec vérification explicite des clés
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
-        if (updateData.password) {
-            // Hash du nouveau mot de passe si fourni
-            const salt = await bcrypt.genSalt(10);
-            updateData.password = await bcrypt.hash(updateData.password, salt);
+        const { id } = req.params;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({ message: "ID d'utilisateur invalide ou manquant." });
+            return;
         }
-        return await User.findByIdAndUpdate(userId, updateData, { new: true }).exec();
+
+        const allowedUpdates: Array<keyof IUser> = [
+            "firstname", "lastname", "username", "password", "email",
+            "role", "dateOfBirth", "phone", "address", "studyLevel", "status"
+        ];
+
+        const updates: Partial<IUser> = {};
+
+        // Filtrer uniquement les champs autorisés
+        for (const key of allowedUpdates) {
+            if (key in req.body) {
+                updates[key] = req.body[key];
+            }
+        }
+
+        if (updates.password) {
+            const saltRounds = 10;
+            const bcrypt = require('bcrypt');
+            updates.password = await bcrypt.hash(updates.password, saltRounds);
+        }
+
+        const options = { new: true, runValidators: true };
+        const updatedUser = await User.findByIdAndUpdate(id, updates, options).populate("studyLevel");
+
+        if (!updatedUser) {
+            res.status(404).json({ message: "Utilisateur non trouvé." });
+            return;
+        }
+
+        res.status(200).json({
+            message: "Utilisateur mis à jour avec succès.",
+            user: updatedUser,
+        });
     } catch (error: any) {
-        throw new Error(`Erreur lors de la mise à jour de l'utilisateur : ${error}`);
+        if (error.name === "ValidationError") {
+            res.status(400).json({ message: "Données de mise à jour invalides.", errors: error.errors });
+            return;
+        }
+
+        res.status(500).json({ message: "Erreur serveur lors de la mise à jour de l'utilisateur.", error });
     }
 };
 
@@ -95,6 +150,38 @@ export const deleteUser = async (userId: string): Promise<IUser | null> => {
         return await User.findByIdAndDelete(userId).exec();
     } catch (error: any) {
         throw new Error(`Erreur lors de la suppression de l'utilisateur : ${error}`);
+    }
+};
+
+export const toggleUserStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Vérification de l'ID utilisateur
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({ message: "ID d'utilisateur invalide ou manquant." });
+            return;
+        }
+
+        // Recherche de l'utilisateur
+        const user = await User.findById(id);
+        if (!user) {
+            res.status(404).json({ message: "Utilisateur non trouvé." });
+            return;
+        }
+
+        // Inversion du statut
+        user.status = !user.status;
+
+        // Sauvegarde des modifications
+        await user.save();
+
+        res.status(200).json({
+            message: "Statut de l'utilisateur mis à jour avec succès.",
+            user,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur lors de la mise à jour du statut.", error });
     }
 };
 
@@ -170,11 +257,26 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
  * @param {string} role - Le rôle des utilisateurs à rechercher (admin, student, teacher).
  * @returns {Promise<IUser[]>} - Une liste d'utilisateurs correspondant au rôle.
  */
-export const getUsersByRole = async (role: string): Promise<IUser[]> => {
+export const getUsersByRole = async (req: Request, res: Response): Promise<void> => {
+    const { role } = req.params;
+
     try {
-        return await User.find({ role }).exec();
+        // Récupérer les utilisateurs par rôle
+        const users: IUser[] = await User.find({ role }).populate("studyLevel").exec();
+
+        // Vérifier si des utilisateurs ont été trouvés
+        if (!users || users.length === 0) {
+            res.status(404).json({ message: `Aucun utilisateur trouvé avec le rôle : ${role}` });
+        }
+
+        // Réponse avec les utilisateurs trouvés
+        res.status(200).json(users);
     } catch (error: any) {
-        throw new Error(`Erreur lors de la récupération des utilisateurs par rôle : ${error.message}`);
+        // Réponse avec un message d'erreur
+        res.status(500).json({
+            message: "Erreur lors de la récupération des utilisateurs par rôle",
+            error: error.message
+        });
     }
 };
 
