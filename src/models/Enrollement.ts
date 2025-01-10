@@ -4,8 +4,8 @@ import { IEnrollement } from "../types/model.enrollement.type";
 
 const EnrollementSchema: Schema = new Schema<IEnrollement>(
     {
-        user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        course_id: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+        user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },// etudiant ayant fait le payment
+        course_id: { type: Schema.Types.ObjectId, ref: "Course", required: true }, // cours payer par l'etudiant
         start_date: { type: Date, required: true },
         status: { type: String, enum: ["pending", "completed", "canceled"], required: true },
         completion_date: { type: Date },

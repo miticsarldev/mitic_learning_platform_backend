@@ -8,6 +8,8 @@ import {
     updateAvis,
     deleteAvis,
     filterAvisByType,
+    getCommentsByProfessor,
+    getRepliesForAvis,
 } from "../controllers/avis.controller";
 
 const router = Router();
@@ -59,5 +61,10 @@ router.delete("/avis/:id", deleteAvis);
  * @desc Filtrer les avis par type (cours, leçon ou exercice)
  */
 router.get("/avis/filter", filterAvisByType);
+
+router.get("/avis/professor/:professorId", getCommentsByProfessor);
+
+// Route pour obtenir les réponses à un avis
+router.get("/avis/replies/:avisId", getRepliesForAvis);
 
 export default router;

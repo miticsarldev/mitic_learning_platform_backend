@@ -56,3 +56,33 @@ export const deleteStudyLevel = async (req: Request, res: Response): Promise<voi
         res.status(400).json({ message: "Erreur lors de la suppression du niveau", error });
     }
 };
+
+
+ //Contrôleur pour récupérer un StudyLevel par ID.
+
+const getStudyLevelById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params; // Récupérer l'ID depuis les paramètres de la requête
+
+        // Vérifier si l'ID est fourni
+        if (!id) {
+            return res.status(400).json({ message: "L'identifiant est requis." });
+        }
+
+        // Rechercher le StudyLevel par ID dans la base de données
+        const studyLevel = await StudyLevel.findById(id);
+
+        // Vérifier si le StudyLevel existe
+        if (!studyLevel) {
+            return res.status(404).json({ message: "StudyLevel non trouvé." });
+        }
+
+        // Répondre avec le StudyLevel trouvé
+        return res.status(200).json(studyLevel);
+    } catch (error) {
+        console.error("Erreur lors de la récupération du StudyLevel:", error);
+        return res.status(500).json({ message: "Erreur serveur interne." });
+    }
+};
+
+export default getStudyLevelById;

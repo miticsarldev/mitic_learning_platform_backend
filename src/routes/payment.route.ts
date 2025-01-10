@@ -7,7 +7,9 @@ import {
     deletePayment,
     filterPayments,
     getPaymentStats,
-    getPaymentsByTeacher
+    getPaymentsByTeacher,
+    getTotalPaymentsByYear,
+    getMonthlyEarningsByTeacher
 } from "../controllers/payment.controller";
 
 const router = Router();
@@ -60,5 +62,11 @@ router.get("/payments/stats", getPaymentStats);
  */
 
 router.get("/payments-teacher/:teacherId", getPaymentsByTeacher);
+
+// Route pour récupérer les paiements totaux par année pour un professeur
+router.get("/payments/teacher/:teacherId/yearly", getTotalPaymentsByYear);
+
+router.get("/payments/monthly-payments/:teacherId/:year", getMonthlyEarningsByTeacher);
+
 
 export default router;
