@@ -21,11 +21,6 @@ const userSchema = Joi.object<IUser>({
     'string.empty': 'Le prénom ne peut pas être vide.',
     'any.required': 'Le prénom est requis.'
   }),
-  lastname: Joi.string().required().messages({
-    'string.base': 'Le nom doit être une chaîne de caractères.',
-    'string.empty': 'Le nom ne peut pas être vide.',
-    'any.required': 'Le nom est requis.'
-  }),
   username: Joi.string().required().messages({
     'string.base': 'Le nom d\'utilisateur doit être une chaîne de caractères.',
     'string.empty': 'Le nom d\'utilisateur ne peut pas être vide.',

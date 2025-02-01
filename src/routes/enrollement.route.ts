@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createEnrollement, deleteEnrollement, getAllEnrollement, getEnrollementById, getStudentsByTeacher, updateEnrollement, getEnrollmentProgress, getEnrollmentsByTeacher } from '../controllers/enrollement.controller';
+import { createEnrollement, deleteEnrollement, getAllEnrollement, getEnrollementById, getStudentsByTeacher, updateEnrollement, getEnrollmentProgress, getEnrollmentsByTeacher, getEnrollementsCountByCourseId, getEnrollementsByStudent } from '../controllers/enrollement.controller';
 
 const router = Router();
 
@@ -26,6 +26,11 @@ router.get('/enrollment/progress/:userId/:period', getEnrollmentProgress);
 
 // Route pour récupérer les inscriptions d'un professeur
 router.get('/enrolment/teacher/:teacherId', getEnrollmentsByTeacher);
+
+// Route pour obtenir le nombre d'inscriptions par ID de cours
+router.get("/courses/:courseId/enrollements/count", getEnrollementsCountByCourseId);
+
+router.get("/enrollment/student/:user_id", getEnrollementsByStudent);
 
 
 export default router;
