@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "start": "node dist/server.js",
+    "build": "tsc",
     "genQRCode": "npx ts-node ./src/generateQRCodes.ts"
   },
   "keywords": [],
