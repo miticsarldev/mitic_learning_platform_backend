@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import Enrollement from "../models/Enrollement";
 import Course from "../models/Course";
 import User from "../models/User";
-import mongoose from "mongoose";
 import { createProgress } from "./progress.controller";
+
+import PDFDocument from "pdfkit";
+
 
 // Créer un enrollement
 export const createEnrollement = async (req: Request, res: Response) => {

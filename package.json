@@ -7,12 +7,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "start": "nodemon src/server.ts",
-    "genQRCode": "npx ts-node ./src/generateQRCodes.ts"
+    "genQRCode": "npx ts-node ./src/generateQRCodes.ts",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
+    "seed:courses": "ts-node src/scripts/seedCourses.ts",
+    "seed:category": "ts-node src/scripts/seedCategory.ts",
+    "seed:jobs": "ts-node src/scripts/seedJobs.ts",
+    "seed:levels": "ts-node src/scripts/seedLevels.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@faker-js/faker": "^9.5.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
@@ -40,6 +46,7 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.17",
+    "@types/pdfkit": "^0.13.9",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"
   }
