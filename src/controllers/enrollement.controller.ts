@@ -4,7 +4,6 @@ import Course from "../models/Course";
 import User from "../models/User";
 import { createProgress } from "./progress.controller";
 
-import PDFDocument from "pdfkit";
 
 
 // Créer un enrollement
