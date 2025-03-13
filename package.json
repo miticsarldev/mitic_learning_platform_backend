@@ -6,14 +6,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "start": "node dist/server.js",
-    "build": "tsc",
-    "genQRCode": "npx ts-node ./src/generateQRCodes.ts"
+    "start": "nodemon src/server.ts",
+    "genQRCode": "npx ts-node ./src/generateQRCodes.ts",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
+    "seed:courses": "ts-node src/scripts/seedCourses.ts",
+    "seed:category": "ts-node src/scripts/seedCategory.ts",
+    "seed:jobs": "ts-node src/scripts/seedJobs.ts",
+    "seed:levels": "ts-node src/scripts/seedLevels.ts",
+    "seed:all": "npm run seed:users && npm run seed:category && npm run seed:jobs && npm run seed:levels && npm run seed:courses"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@faker-js/faker": "^9.6.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
