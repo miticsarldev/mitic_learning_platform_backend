@@ -11,12 +11,16 @@ import {
   register,
   toggleUserStatus,
   updateUser,
+  verifyOTP,
 } from "../controllers/auth.controller";
 
 const router = Router();
 
 // Registration
 router.post("/register", validateUser, register);
+
+router.post("/verify-otp", verifyOTP);
+
 
 // Login
 router.post("/login", login);
