@@ -6,24 +6,26 @@ import { generateAccessToken, generateRefreshToken, sendOTPEmail } from "../util
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import crypto from "crypto";
+import nodemailer from "nodemailer";
+
 
 /**
  * Créer un nouvel utilisateur.
  * @param {IUser} userData - Les données de l'utilisateur à créer.
  * @returns {Promise<IUser>} - L'utilisateur créé.
  */
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { firstname, lastname, username, password, email, phone, role, dateOfBirth, address, studyLevel } = req.body;
+        const { firstname, lastname, username, password, email, phone, role, dateOfBirth, address, studyLevel, status, bio, isVerified } = req.body;
 
         // Vérifier si tous les champs obligatoires sont présents
         if (!firstname || !username || !password || !email || !phone || !role) {
-            return res.status(400).json({ message: "Tous les champs obligatoires doivent être fournis." });
+             res.status(400).json({ message: "Tous les champs obligatoires doivent être fournis." });
         }
 
         // Vérification du rôle
         if (role !== "student" && role !== "teacher" && role !== "admin") {
-            return res.status(400).json({ message: "Rôle invalide." });
+             res.status(400).json({ message: "Rôle invalide." });
         }
 
         // Hachage du mot de passe
@@ -46,6 +48,8 @@ export const register = async (req: Request, res: Response) => {
             studyLevel,
             otp,
             otpExpires,
+            status,
+            bio,
             isVerified: false,
         });
 
@@ -72,7 +76,7 @@ export const register = async (req: Request, res: Response) => {
         });
 
         // Retourner l'utilisateur et l'access token
-        return res.json({
+        res.json({
             user: {
                 id: newUser._id,
                 email: newUser.email,
@@ -401,5 +405,74 @@ export const verifyOTP = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Erreur lors de la vérification de l'OTP :", error);
         res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+/**
+ * Envoie un e-mail contenant un lien de réinitialisation de mot de passe
+ */
+export const sendResetPasswordEmail = async (req: Request, res: Response) => {
+    try {
+        const { id, link } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur introuvable" });
+        }
+
+        // Configurer le transporteur Nodemailer
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "sidibesounk2003@gmail.com",
+                pass: "hqhe name hqsk hczx",
+            },
+            secure: true,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        // Contenu de l'e-mail
+        const mailOptions = {
+            from: "sidibesounk2003@gmail.com",
+            to: user.email,
+            subject: "Réinitialisation de votre mot de passe",
+            text: `Cliquez sur ce lien pour réinitialiser votre mot de passe : ${link}`,
+        };
+
+        // Envoyer l'email
+        await transporter.sendMail(mailOptions);
+
+        return res.status(200).json({ message: "E-mail de réinitialisation envoyé avec succès" });
+    } catch (error) {
+        return res.status(500).json({ message: "Erreur serveur", error });
+    }
+};
+
+/**
+ * Met à jour le mot de passe de l'utilisateur
+ */
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { id, newPassword } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur introuvable" });
+        }
+
+        // Hacher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe dans la base de données
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({ message: "Mot de passe mis à jour avec succès" });
+    } catch (error) {
+        return res.status(500).json({ message: "Erreur serveur", error });
     }
 };
