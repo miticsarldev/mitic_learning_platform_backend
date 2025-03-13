@@ -10,6 +10,7 @@ export interface ICourse extends Document {
     isCertified: Boolean;
     duration: string;
     status: boolean;
+    about?: string;
     created_by: Schema.Types.ObjectId;
     studyLevel_id?: Schema.Types.ObjectId;
     category_id?: Schema.Types.ObjectId;
