@@ -3,12 +3,14 @@ import Enrollement from "../models/Enrollement";
 import Course from "../models/Course";
 import User from "../models/User";
 import mongoose from "mongoose";
+import { createProgress } from "./progress.controller";
 
 // Créer un enrollement
 export const createEnrollement = async (req: Request, res: Response) => {
   try {
     const newEnrollement = new Enrollement(req.body);
     await newEnrollement.save();
+    createProgress(req, res);
     res.status(201).json(newEnrollement);
   } catch (error) {
     res.status(400).json({ message: "Erreur lors de la création de l'inscription", error });
@@ -53,7 +55,7 @@ export const updateEnrollement = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Supprimer une catégorie
+// Supprimer une inscription
 export const deleteEnrollement = async (req: Request, res: Response): Promise<void> => {
   try {
     const deletedEnrollement = await Enrollement.findByIdAndDelete(req.params.id);
@@ -209,5 +211,52 @@ export const getEnrollmentsByTeacher = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Erreur serveur lors de la récupération des inscriptions.' });
+  }
+};
+
+//recuperer le nombre d'inscription d'un cours 
+export const getEnrollementsCountByCourseId = async (req: Request, res: Response) => {
+  try {
+    // Récupérer l'ID du cours depuis les paramètres de la requête
+    const { courseId } = req.params;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "L'ID du cours est requis." });
+    }
+
+    // Compter le nombre d'inscriptions pour ce cours
+    const enrollementsCount = await Enrollement.countDocuments({ course_id: courseId });
+
+    // Retourner la réponse
+    return res.status(200).json({
+      courseId,
+      enrollementsCount,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des inscriptions :", error);
+    return res.status(500).json({ message: "Erreur serveur." });
+  }
+};
+
+export const getEnrollementsByStudent = async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+
+    if (!user_id) {
+      return res.status(400).json({ message: "L'ID de l'étudiant est requis." });
+    }
+
+    const enrollements = await Enrollement.find({ user_id })
+      .populate("course_id") // Récupère les infos du cours
+      .exec();
+
+    if (!enrollements.length) {
+      return res.status(404).json({ message: "Aucun enrôlement trouvé pour cet étudiant." });
+    }
+
+    res.status(200).json(enrollements);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des enrôlements :", error);
+    res.status(500).json({ message: "Erreur serveur." });
   }
 };
