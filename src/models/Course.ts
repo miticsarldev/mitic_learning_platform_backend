@@ -12,6 +12,7 @@ const CourseSchema: Schema = new Schema<ICourse>(
         isCertified: { type: Boolean, default: false },
         duration: { type: String },
         status: { type: Boolean, default: false },
+        about: { type: String },
         created_by: { type: Schema.Types.ObjectId, required: true, ref: "User" },
         studyLevel_id: { type: Schema.Types.ObjectId, ref: "StudyLevel" },
         job_id: { type: Schema.Types.ObjectId, ref: "Job" },

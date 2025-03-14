@@ -4,7 +4,7 @@ import upload from "../middlewares/multer";
 const router = express.Router();
 
 // Route pour créer un cours
-router.post("/course", upload ,  createCourse);
+router.post("/course", upload, createCourse);
 
 // Route pour obtenir tous les cours
 router.get("/course", getAllCourse);
@@ -27,5 +27,6 @@ router.get("/course/getCourseAllInfo/:courseId", getCourseDetails);
 
 // Route pour récupérer les cours par professeur
 router.get("/course/teacher/:teacherId", getCoursesByTeacher);
+
 
 export default router;
