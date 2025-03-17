@@ -30,3 +30,4 @@ router.get("/course/teacher/:teacherId", getCoursesByTeacher);
 
 
 export default router;
+

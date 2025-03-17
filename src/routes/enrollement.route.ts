@@ -32,5 +32,4 @@ router.get("/courses/:courseId/enrollements/count", getEnrollementsCountByCourse
 
 router.get("/enrollment/student/:user_id", getEnrollementsByStudent);
 
-
 export default router;
