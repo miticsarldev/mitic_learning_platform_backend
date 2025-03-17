@@ -12,10 +12,10 @@ export interface IUser extends Document {
     dateOfBirth?: Date;
     phone: string;
     address?: string;
-    studyLevel?:  Schema.Types.ObjectId;
+    studyLevel?: Schema.Types.ObjectId;
     lastLogin: Date;
     status: boolean;
     isVerified: boolean;
     otp: string | undefined;
     otpExpires: Date | undefined;
-}
+
