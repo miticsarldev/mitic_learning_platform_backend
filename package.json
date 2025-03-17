@@ -12,7 +12,8 @@
     "seed:courses": "ts-node src/scripts/seedCourses.ts",
     "seed:category": "ts-node src/scripts/seedCategory.ts",
     "seed:jobs": "ts-node src/scripts/seedJobs.ts",
-    "seed:levels": "ts-node src/scripts/seedLevels.ts"
+    "seed:levels": "ts-node src/scripts/seedLevels.ts",
+    "seed:all": "npm run seed:users && npm run seed:category && npm run seed:jobs && npm run seed:levels && npm run seed:courses"
   },
   "keywords": [],
   "author": "",

@@ -19,8 +19,8 @@ const generateFakeData = async () => {
                 price: faker.number.int({ min: 10, max: 200 }),
                 isCertified: faker.datatype.boolean(),
                 duration: `${faker.number.int({ min: 1, max: 10 })} heures`,
-                created_by: "6774612d415338a3d23e584a", 
-                studyLevel_id: "6773e80ac8998e62be3a8540", 
+                created_by: "6774612d415338a3d23e584a",
+                studyLevel_id: "6773e80ac8998e62be3a8540",
                 job_id: "67596e4b764dc8267155a431",
                 category_id: "6772aed8e7e53cbf7b616690",
                 path_image: `/uploads/${faker.image.urlLoremFlickr({ category: "education" })}`,
@@ -73,3 +73,4 @@ const generateFakeData = async () => {
 };
 
 generateFakeData();
+
