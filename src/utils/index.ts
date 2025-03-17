@@ -75,4 +75,3 @@ export const sendOTPEmail = async (email: string, otp: string) => {
   };
 
   await transporter.sendMail(mailOptions);
-};

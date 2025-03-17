@@ -9,14 +9,20 @@ import {
   logout,
   refreshToken,
   register,
+  resetPassword,
+  sendResetPasswordEmail,
   toggleUserStatus,
   updateUser,
+  verifyOTP,
 } from "../controllers/auth.controller";
 
 const router = Router();
 
 // Registration
 router.post("/register", validateUser, register);
+
+router.post("/verify-otp", verifyOTP);
+
 
 // Login
 router.post("/login", login);
@@ -42,6 +48,9 @@ router.patch("/users/:id/toggle-status", toggleUserStatus);
 router.get("/users/id/:id", getUserById);   // Route pour obtenir un utilisateur par ID
 
 router.get("/users/role/:role", getUsersByRole); // Route pour obtenir les utilisateurs par rôle
+
+router.post("/send-reset-email", sendResetPasswordEmail);
+router.post("/reset-password", resetPassword);
 
 
 export default router;
