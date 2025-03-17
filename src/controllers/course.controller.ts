@@ -244,7 +244,7 @@ export const getCourseDetails = async (req: Request, res: Response) => {
 
         // Récupère les informations du cours en populant ses clés étrangères
         const course = await Course.findById(courseId)
-            .populate("created_by", "firstname lastname email") // Peuple l'utilisateur créateur
+            .populate("created_by") // Peuple l'utilisateur créateur
             .populate("studyLevel_id", "name") // Peuple le niveau d'étude
             .populate("job_id", "name") // Peuple le métier
             .populate("category_id", "name"); // Peuple la catégorie

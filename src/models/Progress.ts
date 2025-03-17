@@ -1,5 +1,4 @@
 
-//model Progress
 import { Schema, model } from "mongoose";
 import { IProgress } from "../types/model.progress.type";
 

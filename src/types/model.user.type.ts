@@ -18,4 +18,4 @@ export interface IUser extends Document {
     isVerified: boolean;
     otp: string | undefined;
     otpExpires: Date | undefined;
-}
+
