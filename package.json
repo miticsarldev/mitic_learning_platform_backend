@@ -6,7 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "start": "nodemon src/server.ts",
+    "start2": "nodemon src/server.ts",
+    "start": "node src/server.js",
+    "build": "tsc",
+    "vercel-build": "echo hello",
     "genQRCode": "npx ts-node ./src/generateQRCodes.ts",
     "seed:users": "ts-node src/scripts/seedUsers.ts",
     "seed:courses": "ts-node src/scripts/seedCourses.ts",
@@ -14,6 +17,9 @@
     "seed:jobs": "ts-node src/scripts/seedJobs.ts",
     "seed:levels": "ts-node src/scripts/seedLevels.ts",
     "seed:all": "npm run seed:users && npm run seed:category && npm run seed:jobs && npm run seed:levels && npm run seed:courses"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "keywords": [],
   "author": "",
