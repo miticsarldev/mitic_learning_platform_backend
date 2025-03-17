@@ -260,4 +260,3 @@ export const getEnrollementsByStudent = async (req: Request, res: Response) => {
     console.error("Erreur lors de la récupération des enrôlements :", error);
     res.status(500).json({ message: "Erreur serveur." });
   }
-};
