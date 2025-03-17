@@ -2,31 +2,37 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User"; // Importer le modèle User
 import { IUser } from "../types/model.user.type";
-import { generateAccessToken, generateRefreshToken } from "../utils";
+import { generateAccessToken, generateRefreshToken, sendOTPEmail } from "../utils";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+
 
 /**
  * Créer un nouvel utilisateur.
  * @param {IUser} userData - Les données de l'utilisateur à créer.
  * @returns {Promise<IUser>} - L'utilisateur créé.
  */
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { firstname, lastname, username, password, email, phone, role, dateOfBirth, address, studyLevel } = req.body;
+        const { firstname, lastname, username, password, email, phone, role, dateOfBirth, address, studyLevel, status, bio, isVerified } = req.body;
 
         // Vérifier si tous les champs obligatoires sont présents
-        if (!firstname || !lastname || !username || !password || !email || !phone || !role) {
-            return res.status(400).json({ message: "Tous les champs obligatoires doivent être fournis." });
+        if (!firstname || !username || !password || !email || !phone || !role) {
+             res.status(400).json({ message: "Tous les champs obligatoires doivent être fournis." });
         }
 
         // Vérification du rôle
         if (role !== "student" && role !== "teacher" && role !== "admin") {
-            return res.status(400).json({ message: "Rôle invalide." });
+             res.status(400).json({ message: "Rôle invalide." });
         }
 
         // Hachage du mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
+        // Génération de l'OTP (6 chiffres aléatoires)
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min de validité
 
         // Création de l'utilisateur
         const newUser = new User({
@@ -40,14 +46,50 @@ export const register = async (req: Request, res: Response) => {
             dateOfBirth,
             address,
             studyLevel,
+            otp,
+            otpExpires,
+            status,
+            bio,
+            isVerified: false,
         });
+
 
         // Sauvegarde de l'utilisateur
         await newUser.save();
 
-        // Réponse
-        res.status(201).json({ message: "Utilisateur créé avec succès", user: newUser });
+        // Envoi de l'OTP par email
+        sendOTPEmail(email, otp);
 
+        // Générer les jetons JWT
+        const accessToken = generateAccessToken(newUser.email);
+        const refreshToken = generateRefreshToken(newUser.email);
+
+        // Mettre à jour le dernier accès de l'utilisateur
+        newUser.lastLogin = new Date();
+        await newUser.save();
+
+        // Ajouter le refresh token dans un cookie sécurisé
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true, // Utilisez `secure: true` en production avec HTTPS
+            sameSite: "strict",
+        });
+
+        // Retourner l'utilisateur et l'access token
+        res.json({
+            user: {
+                id: newUser._id,
+                email: newUser.email,
+                username: newUser.username,
+                firstname: newUser.firstname,
+                lastname: newUser.lastname,
+                phone: newUser.phone,
+                adress: newUser.address,
+                role: newUser.role,
+                lastLogin: newUser.lastLogin,
+            },
+            accessToken,
+        });
     } catch (error) {
         console.error('Erreur lors de la création de l\'utilisateur :', error);
         res.status(500).json({ message: `Erreur interne du serveur : ${error}` });
@@ -71,7 +113,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
         }
 
         // Recherche de l'utilisateur par ID
-        const user = await User.findById(id);
+        const user = await User.findById(id).populate("studyLevel");
 
         if (!user) {
             res.status(404).json({ message: "Utilisateur non trouvé." });
@@ -185,6 +227,33 @@ export const toggleUserStatus = async (req: Request, res: Response): Promise<voi
     }
 };
 
+/**
+ * Récupérer une liste d'utilisateurs par rôle.
+ * @param {string} role - Le rôle des utilisateurs à rechercher (admin, student, teacher).
+ * @returns {Promise<IUser[]>} - Une liste d'utilisateurs correspondant au rôle.
+ */
+export const getUsersByRole = async (req: Request, res: Response): Promise<void> => {
+    const { role } = req.params;
+
+    try {
+        // Récupérer les utilisateurs par rôle
+        const users: IUser[] = await User.find({ role }).populate("studyLevel").exec();
+
+        // Vérifier si des utilisateurs ont été trouvés
+        if (!users || users.length === 0) {
+            res.status(404).json({ message: `Aucun utilisateur trouvé avec le rôle : ${role}` });
+        }
+
+        // Réponse avec les utilisateurs trouvés
+        res.status(200).json(users);
+    } catch (error: any) {
+        // Réponse avec un message d'erreur
+        res.status(500).json({
+            message: "Erreur lors de la récupération des utilisateurs par rôle",
+            error: error.message
+        });
+    }
+};
 
 
 export const login = async (req: Request, res: Response): Promise<Response> => {
@@ -238,6 +307,10 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
                 id: user._id,
                 email: user.email,
                 username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                phone: user.phone,
+                adress: user.address,
                 role: user.role,
                 lastLogin: user.lastLogin,
             },
@@ -249,40 +322,6 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
             message: "Erreur interne du serveur.",
         });
     }
-};
-
-
-/**
- * Récupérer une liste d'utilisateurs par rôle.
- * @param {string} role - Le rôle des utilisateurs à rechercher (admin, student, teacher).
- * @returns {Promise<IUser[]>} - Une liste d'utilisateurs correspondant au rôle.
- */
-export const getUsersByRole = async (req: Request, res: Response): Promise<void> => {
-    const { role } = req.params;
-
-    try {
-        // Récupérer les utilisateurs par rôle
-        const users: IUser[] = await User.find({ role }).populate("studyLevel").exec();
-
-        // Vérifier si des utilisateurs ont été trouvés
-        if (!users || users.length === 0) {
-            res.status(404).json({ message: `Aucun utilisateur trouvé avec le rôle : ${role}` });
-        }
-
-        // Réponse avec les utilisateurs trouvés
-        res.status(200).json(users);
-    } catch (error: any) {
-        // Réponse avec un message d'erreur
-        res.status(500).json({
-            message: "Erreur lors de la récupération des utilisateurs par rôle",
-            error: error.message
-        });
-    }
-};
-
-export const logout = async (req: Request, res: Response) => {
-    res.clearCookie("refreshToken");
-    res.json({ message: "Logged out successfully" });
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
@@ -318,6 +357,11 @@ export const refreshToken = async (req: Request, res: Response) => {
     }
 };
 
+export const logout = async (req: Request, res: Response) => {
+    res.clearCookie("refreshToken");
+    res.json({ message: "Logged out successfully" });
+};
+
 // Contrôleur pour récupérer tous les utilisateurs
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -334,5 +378,101 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
             success: false,
             message: "Erreur interne du serveur.",
         });
+    }
+};
+
+export const verifyOTP = async (req: Request, res: Response) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: "Email et OTP sont requis." });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user || user.otp !== otp || user.otpExpires && new Date() > user.otpExpires) {
+            return res.status(400).json({ message: "OTP invalide ou expiré." });
+        }
+
+        // Marquer l'utilisateur comme vérifié
+        user.isVerified = true;
+        user.otp = undefined; // Supprimer l'OTP après validation
+        user.otpExpires = undefined;
+        await user.save();
+
+        return res.json({ message: "Compte vérifié avec succès." });
+    } catch (error) {
+        console.error("Erreur lors de la vérification de l'OTP :", error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+/**
+ * Envoie un e-mail contenant un lien de réinitialisation de mot de passe
+ */
+export const sendResetPasswordEmail = async (req: Request, res: Response) => {
+    try {
+        const { id, link } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur introuvable" });
+        }
+
+        // Configurer le transporteur Nodemailer
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "sidibesounk2003@gmail.com",
+                pass: "hqhe name hqsk hczx",
+            },
+            secure: true,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        // Contenu de l'e-mail
+        const mailOptions = {
+            from: "sidibesounk2003@gmail.com",
+            to: user.email,
+            subject: "Réinitialisation de votre mot de passe",
+            text: `Cliquez sur ce lien pour réinitialiser votre mot de passe : ${link}`,
+        };
+
+        // Envoyer l'email
+        await transporter.sendMail(mailOptions);
+
+        return res.status(200).json({ message: "E-mail de réinitialisation envoyé avec succès" });
+    } catch (error) {
+        return res.status(500).json({ message: "Erreur serveur", error });
+    }
+};
+
+/**
+ * Met à jour le mot de passe de l'utilisateur
+ */
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { id, newPassword } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur introuvable" });
+        }
+
+        // Hacher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe dans la base de données
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.status(200).json({ message: "Mot de passe mis à jour avec succès" });
+    } catch (error) {
+        return res.status(500).json({ message: "Erreur serveur", error });
     }
 };

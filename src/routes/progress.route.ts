@@ -16,3 +16,4 @@ router.get("/progress/:user_id", getAllProgressForUser); // Voir toutes les prog
 router.delete("/progress/:user_id/:course_id", deleteProgress); // Supprimer une progression
 
 export default router;
+

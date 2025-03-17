@@ -70,9 +70,9 @@ app.post("/api/orange-money/pay", async (req, res) => {
       ORANGE_PAYMENT_URL,
       {
         "merchant_key": process.env.ORANGE_MERCHANT_KEY,
-        "currency": "XOF",
+        "currency": "OMUV",
         "order_id": orderId,
-        "amount": amount,
+        "amount": 100,
         "return_url": "http://localhost:3000/cours/cours_details/67780e77673938fa8299204a",
         "cancel_url": "http://localhost:3000/cours/cours_details/67780e77673938fa8299204a",
         "notif_url": "https://ton-site.com/notify",
