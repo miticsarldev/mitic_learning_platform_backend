@@ -73,3 +73,4 @@ const generateFakeData = async () => {
 };
 
 generateFakeData();
+

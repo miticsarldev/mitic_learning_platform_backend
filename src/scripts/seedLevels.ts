@@ -21,6 +21,7 @@ const createFakeStudyLevel = () => {
         name: faker.lorem.word(),
         description: faker.lorem.sentence(),
     });
+
 };
 
 // Insertion de plusieurs niveaux d'étude
@@ -37,6 +38,7 @@ async function seedStudyLevels(nbStudyLevels = 10) {
         mongoose.connection.close();
         console.log("🔌 Déconnecté de MongoDB");
     }
+
 }
 
 // Exécuter le script avec 10 niveaux d'étude par défaut

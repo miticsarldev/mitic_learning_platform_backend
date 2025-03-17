@@ -41,3 +41,4 @@ async function seedCategories(nbCategories = 10) {
 
 // Exécuter le script avec 10 catégories par défaut
 seedCategories(10);
+

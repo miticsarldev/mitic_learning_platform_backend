@@ -41,3 +41,4 @@ async function seedJobs(nbJobs = 10) {
 
 // Exécuter le script avec 10 jobs par défaut
 seedJobs(10);
+

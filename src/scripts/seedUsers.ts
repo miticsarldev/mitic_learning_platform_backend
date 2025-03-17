@@ -14,6 +14,7 @@ async function connectDB() {
         console.error("❌ Erreur de connexion MongoDB:", error);
         process.exit(1);
     }
+
 }
 
 // Fonction pour générer un utilisateur factice
@@ -55,3 +56,4 @@ async function seedUsers(nbUsers = 10) {
 
 // Exécuter le script
 seedUsers(20); // Change le nombre si besoin
+
